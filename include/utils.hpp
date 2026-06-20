@@ -12,7 +12,7 @@ enum LogLevel {
     LOG_TYPE_WARNING,
     LOG_TYPE_INFO,
     LOG_TYPE_ERROR
-};  
+};    
 
 
 inline void PrintCurrentTime() {
