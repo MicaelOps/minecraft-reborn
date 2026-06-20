@@ -39,7 +39,6 @@ inline void LogMessage(LogLevel level, std::string_view text) {
 
 
 
-
 }
 }
 #endif

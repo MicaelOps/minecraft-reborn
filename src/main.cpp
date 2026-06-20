@@ -2,33 +2,41 @@
 #include <fstream>
 #include <ios>
 
+#include "fileschemas.hpp"
+#include "fileparser.hpp"
 #include "utils.hpp"
 
 
-constexpr std::string_view settingsConfig = "name=asda\naplspa";
+
 
 int main(int argc, char* argv[]) {
     
     using namespace Minecraft::Utils;
 
-    std::ifstream configFile("settings.config", std::ios_base::in);
+    // file config loads
+    {
+        std::ifstream configFile("settings.config", std::ios_base::in);
 
-    if(!configFile) {
-        
-        LogMessage(LOG_TYPE_WARNING, "Settings file not found! Creating new one...");
+        LineEntry schema[] = {MAIN_SETTINGS_FILE_SCHEMA(FILE_SCHEMA_ENTRY_RESOLVER)};
+     
+        if(!configFile) {
+            
+            LogMessage(LOG_TYPE_WARNING, "Settings file not found! Creating new one...");
+            
+            // create file
+            std::ofstream outputFile("settings.config");
 
-        
-        // create file
-        std::ofstream outputFile("settings.config");
-        outputFile.write(settingsConfig.data(), settingsConfig.size());
-        outputFile.close();
+            auto configData = FileParser::SchemaToString(schema, 4);
+            outputFile.write(configData.data(), configData.size());
+            outputFile.close();
 
-        LogMessage(LOG_TYPE_INFO, "Default settings have been written. Please change them as appropriate. For more information, visit the github page ");
-        return -1;
+            LogMessage(LOG_TYPE_INFO, "Default settings have been written. Please change them as appropriate. For more information, visit the github page ");
+            return -1;
+        }
+   
     }
 
-    
-
-    std::cout << "Initiating the server...." << std::endl;
+    LogMessage(LOG_TYPE_INFO, "Initiating the server...");
+    std::cout << std::endl;
     return 0;
 }
