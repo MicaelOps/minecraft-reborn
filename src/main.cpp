@@ -17,6 +17,7 @@ int main(int argc, char* argv[]) {
         
         LogMessage(LOG_TYPE_WARNING, "Settings file not found! Creating new one...");
 
+        
         // create file
         std::ofstream outputFile("settings.config");
         outputFile.write(settingsConfig.data(), settingsConfig.size());
