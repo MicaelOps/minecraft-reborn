@@ -5,6 +5,19 @@
 #include <iostream>
 #include <chrono>
 
+
+#define RETURN_IF(method)     \
+    if((method)) return true;
+
+#define RETURN_IF_MESSAGE(method, message)      \
+    if((method)) {                              \
+        LogMessage(LOG_TYPE_ERROR, message);    \
+        return true;                            \
+    }                       
+
+
+
+
 namespace Minecraft {
 namespace Utils {
 
@@ -24,10 +37,10 @@ inline void PrintCurrentTime() {
     auto today = floor<days>(now);
     hh_mm_ss time{floor<seconds>(now - today)};
 
-    std::cout << "[" << time.hours().count() << ":" << time.minutes().count() << ":" << time.seconds().count() << "]";
+    std::cout << "[" << time.hours().count() << ":" << time.minutes().count() << ":" << time.seconds().count() << "] ";
 }
 
-inline void LogMessage(LogLevel level, std::string_view text) {
+inline void LogMessage(const LogLevel& level, std::string_view text) {
 
     static constexpr std::array<std::string_view, 3> logLabels = {
         "[WARNING]", "[INFO]", "[ERROR]"

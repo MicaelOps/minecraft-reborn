@@ -2,8 +2,6 @@
 #define FILE_PARSER_H
 
 #include <fstream>
-#include <string>
-#include <string_view>
 #include <utility>
 #include <variant>
 
@@ -14,90 +12,95 @@
 namespace Minecraft {
 namespace Utils {
 
-    struct LineEntry {
+struct LineEntry {
 
-        enum Type {
+    enum Type {
 
-            TEXT, NUMBER
-        };  
-        std::string_view name;
-        Type type;
-        std::variant<std::string_view, int> value; // also default value        
-    };
-    
-    inline std::variant<std::string_view, int> ParseValue(std::string_view value, LineEntry::Type type) {
+        TEXT, NUMBER
+    };  
+    std::string_view name;
+    Type type;
+    std::variant<std::string, int> value; // also default value        
+};
 
-        int integerValue = -1;
+inline bool ParseValue(std::string_view value, LineEntry::Type type, std::variant<std::string, int>& entry) {
+
+    int integerValue = -1;
             
-        switch (type) {
-            case LineEntry::NUMBER:
-                std::from_chars(value.begin(), value.end(), integerValue);
-                return integerValue;        
-            case LineEntry::TEXT:
-                return value;
-            default:
-              return "ERROR_TYPE";
+    switch (type) {
+        case LineEntry::NUMBER:
+            std::from_chars(value.begin(), value.end(), integerValue);
+            entry = integerValue;        
+            return false;
+        case LineEntry::TEXT:
+            std::get<std::string>(entry).assign(value);
+            return false;
+        default:
+          return true;
+    }
+    std::unreachable();
+}
+
+
+class FileParser {
+
+    using FileSchema = LineEntry[];
+
+    FileParser() = delete;
+    FileParser(FileParser&) = delete;
+
+public:
+    static std::string SchemaToString(const FileSchema& schema, int schemaSize) {
+        std::string text;
+
+        text.reserve(schemaSize*20);
+
+        for(auto i = 0; i < schemaSize; ++i) {
+            text.append(schema[i].name);
+            text.append("=");
+    
+            std::visit([&](const auto& v) {
+                using T = std::decay_t<decltype(v)>;
+                if constexpr (std::is_same_v<T, std::string>) {
+                    text.append(v);
+                } else if constexpr (std::is_same_v<T, int>) {
+                    text.append(std::to_string(v));
+                }
+            }, schema[i].value);
+            text.append("\n");
         }
-        std::unreachable();
+        return text;
     }
 
+    static bool Process(std::ifstream& stream, FileSchema& schema, int schemaSize) {
+    
+        std::string line;
+        int count = 0;
 
-    class FileParser {
+        while (std::getline(stream, line)) {
 
-        using FileSchema = LineEntry[];
+            const std::string_view lineView(line);
 
-        FileParser() = delete;
-        FileParser(FileParser&) = delete;
+            const auto index = lineView.find_first_of('=');
 
-    public:
-        static std::string SchemaToString(const FileSchema& schema, int schemaSize) {
-            std::string text;
+            RETURN_IF_MESSAGE(index == std::string::npos, std::format("Unable to parse line: {}", lineView));
 
-            text.reserve(schemaSize*20);
+            const auto key = lineView.subview(0, index);
 
             for(auto i = 0; i < schemaSize; ++i) {
-                text.append(schema[i].name);
-                text.append("=");
-    
-                std::visit([&](const auto& v) {
-                    using T = std::decay_t<decltype(v)>;
-
-                    if constexpr (std::is_same_v<T, std::string_view>) {
-                        text.append(v);
-                    } else if constexpr (std::is_same_v<T, int>) {
-                        text.append(std::to_string(v));
-                    }
-                }, schema[i].value);
-
-                text.append("\n");
-            }
-            return text;
-        }
-
-        static void Process(std::ifstream& stream, FileSchema& schema, int schemaSize) {
-    
-            std::string line;
-            while (std::getline(stream, line)) {
-
-                std::string_view lineView(line);
-
-                auto index = lineView.find_first_of('=');
-
-                if(index == std::string::npos) {
-                    LogMessage(LOG_TYPE_WARNING, std::format("Ignoring line: {}", lineView));
-                    continue;
-                }
-
-                const auto key = lineView.substr(0, index);
-
-                for(auto i = 0; i < schemaSize; ++i) {
-                    if(key == schema[i].name) {
-                        schema[i].value = std::move(ParseValue(key, schema[i].type));
-                    }    
-                }
+                if(key == schema[i].name) {
+                    RETURN_IF_MESSAGE(ParseValue(lineView.subview(index+1), schema[i].type, schema[i].value), "Unable to parse value");
+                    ++count;  
+                }  
             }
         }
-    };
+
+        // Checking if we parsed all the lines we expected
+        RETURN_IF_MESSAGE(count!=schemaSize, "Unable to parse all values");
+
+        return false; // function did not fail
+    }
+};
 }
 }
 #endif
