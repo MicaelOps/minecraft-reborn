@@ -7,7 +7,14 @@
 
 #include "utils.hpp"
 
-#define FILE_SCHEMA_ENTRY_RESOLVER(name, type, value) {name, LineEntry::Type::type, value}
+#define FILE_SCHEMA_ENTRY_RESOLVER(identifier, name, type, value) {name, LineEntry::Type::type, value}
+
+
+#define FILE_SCHEMA_ENTRY_ERASER(identifier, name, type, value) identifier
+
+#define FILE_SCHEMA_SCHEMA_COUNT(decl, prefix) decl, prefix##_SCHEMA_COUNT
+
+#define FILE_SCHEMA_ENTRY_IDENTIFIER_SETUP(declarations, prefix) enum { declarations, prefix##_SCHEMA_COUNT};
 
 namespace Minecraft {
 namespace Utils {

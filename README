@@ -1,4 +1,11 @@
-#Minecraft-reborn
+Minecraft-reborn - Minecraft server application but in c++
+
+Tired of java? How about some c++!
+
+My delusional goal is for this project to be a higly performant minecraft server application for linux and c++ enjoyers.
+
+21/06/26
+- Did the macro magic. Well, not really magic, but the first time I saw it, it looked like magic. Almost on par with template sorcery
 
 21/06/26
 - Setup the config file, need to add a macro to automatically define my entries to avoid magic numbers

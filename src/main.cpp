@@ -14,8 +14,9 @@ int main(int argc, char* argv[]) {
     {
         std::ifstream configFile("settings.config", std::ios_base::in);
 
+        FILE_SCHEMA_ENTRY_IDENTIFIER_SETUP(MAIN_SETTINGS_FILE_SCHEMA(FILE_SCHEMA_ENTRY_ERASER), MAIN);
+
         LineEntry schema[] = {MAIN_SETTINGS_FILE_SCHEMA(FILE_SCHEMA_ENTRY_RESOLVER)};
-     
      
         LogMessage(LOG_TYPE_INFO, "Loading settings.config...");
    
@@ -26,7 +27,7 @@ int main(int argc, char* argv[]) {
             // create file
             std::ofstream outputFile("settings.config");
 
-            auto configData = FileParser::SchemaToString(schema, 4);
+            auto configData = FileParser::SchemaToString(schema, MAIN_SCHEMA_COUNT);
             outputFile.write(configData.data(), configData.size());
             outputFile.close();
 
@@ -34,9 +35,9 @@ int main(int argc, char* argv[]) {
             return -1;
         }
 
-        RETURN_IF_MESSAGE(FileParser::Process(configFile, schema, 4), "Unable to process Config File");
+        RETURN_IF_MESSAGE(FileParser::Process(configFile, schema, MAIN_SCHEMA_COUNT), "Unable to process Config File");
 
-        LogMessage(LOG_TYPE_INFO, std::format("the value for hostname is {}", std::get<std::string>(schema[0].value)));
+        LogMessage(LOG_TYPE_INFO, std::format("the value for hostname is {}", std::get<std::string>(schema[SETTINGS_HOSTNAME].value)));
    
     }
 
